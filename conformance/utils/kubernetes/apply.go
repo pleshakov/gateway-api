@@ -50,8 +50,7 @@ type Applier struct {
 	// If empty or nil, ports are not modified.
 	ValidUniqueListenerPorts []v1beta1.PortNumber
 
-	// GatewayClass will be used as the spec.gatewayClassName when applying Gateway resources
-	GatewayClass string
+	GatewayClassAllocator GatewayClassAllocator
 
 	// ControllerName will be used as the spec.controllerName when applying GatewayClass resources
 	ControllerName string
@@ -63,7 +62,12 @@ type Applier struct {
 // prepareGateway adjusts both listener ports and the gatewayClassName. It
 // returns an index pointing to the next valid listener port.
 func (a Applier) prepareGateway(t *testing.T, uObj *unstructured.Unstructured, portIndex int) int {
-	err := unstructured.SetNestedField(uObj.Object, a.GatewayClass, "spec", "gatewayClassName")
+	gcName := a.GatewayClassAllocator.Allocate()
+	t.Cleanup(func() {
+		a.GatewayClassAllocator.Free(gcName)
+	})
+
+	err := unstructured.SetNestedField(uObj.Object, gcName, "spec", "gatewayClassName")
 	require.NoErrorf(t, err, "error setting `spec.gatewayClassName` on %s Gateway resource", uObj.GetName())
 
 	if len(a.ValidUniqueListenerPorts) > 0 {

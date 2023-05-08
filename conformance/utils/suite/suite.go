@@ -39,6 +39,7 @@ type ConformanceTestSuite struct {
 	RestConfig        *rest.Config
 	RoundTripper      roundtripper.RoundTripper
 	GatewayClassName  string
+	GatewayClassNames []string
 	ControllerName    string
 	Debug             bool
 	Cleanup           bool
@@ -53,15 +54,16 @@ type ConformanceTestSuite struct {
 
 // Options can be used to initialize a ConformanceTestSuite.
 type Options struct {
-	Client           client.Client
-	RESTClient       *rest.RESTClient
-	RestConfig       *rest.Config
-	GatewayClassName string
-	Debug            bool
-	RoundTripper     roundtripper.RoundTripper
-	BaseManifests    string
-	MeshManifests    string
-	NamespaceLabels  map[string]string
+	Client            client.Client
+	RESTClient        *rest.RESTClient
+	RestConfig        *rest.Config
+	GatewayClassName  string
+	GatewayClassNames []string
+	Debug             bool
+	RoundTripper      roundtripper.RoundTripper
+	BaseManifests     string
+	MeshManifests     string
+	NamespaceLabels   map[string]string
 	// ValidUniqueListenerPorts maps each listener port of each Gateway in the
 	// manifests to a valid, unique port. There must be as many
 	// ValidUniqueListenerPorts as there are listeners in the set of manifests.
@@ -111,19 +113,29 @@ func New(s Options) *ConformanceTestSuite {
 		s.FS = &conformance.Manifests
 	}
 
+	var gatewayClassAllocator kubernetes.GatewayClassAllocator
+
+	if len(s.GatewayClassNames) == 0 {
+		gatewayClassAllocator = kubernetes.NewSingleGatewayClassAllocator(s.GatewayClassName)
+	} else {
+		gatewayClassAllocator = kubernetes.NewMultiGatewayClassAllocator(s.GatewayClassNames)
+	}
+
 	suite := &ConformanceTestSuite{
-		Client:           s.Client,
-		RESTClient:       s.RESTClient,
-		RestConfig:       s.RestConfig,
-		RoundTripper:     roundTripper,
-		GatewayClassName: s.GatewayClassName,
-		Debug:            s.Debug,
-		Cleanup:          s.CleanupBaseResources,
-		BaseManifests:    s.BaseManifests,
-		MeshManifests:    s.MeshManifests,
+		Client:            s.Client,
+		RESTClient:        s.RESTClient,
+		RestConfig:        s.RestConfig,
+		RoundTripper:      roundTripper,
+		GatewayClassName:  s.GatewayClassName,
+		GatewayClassNames: s.GatewayClassNames,
+		Debug:             s.Debug,
+		Cleanup:           s.CleanupBaseResources,
+		BaseManifests:     s.BaseManifests,
+		MeshManifests:     s.MeshManifests,
 		Applier: kubernetes.Applier{
 			NamespaceLabels:          s.NamespaceLabels,
 			ValidUniqueListenerPorts: s.ValidUniqueListenerPorts,
+			GatewayClassAllocator:    gatewayClassAllocator,
 		},
 		SupportedFeatures: s.SupportedFeatures,
 		TimeoutConfig:     s.TimeoutConfig,
@@ -145,10 +157,17 @@ func New(s Options) *ConformanceTestSuite {
 // Setup ensures the base resources required for conformance tests are installed
 // in the cluster. It also ensures that all relevant resources are ready.
 func (suite *ConformanceTestSuite) Setup(t *testing.T) {
-	t.Logf("Test Setup: Ensuring GatewayClass has been accepted")
-	suite.ControllerName = kubernetes.GWCMustHaveAcceptedConditionTrue(t, suite.Client, suite.TimeoutConfig, suite.GatewayClassName)
+	t.Logf("Test Setup: Ensuring GatewayClass(es) has been accepted")
 
-	suite.Applier.GatewayClass = suite.GatewayClassName
+	for _, gc := range suite.GatewayClassNames {
+		suite.ControllerName = kubernetes.GWCMustHaveAcceptedConditionTrue(t, suite.Client, suite.TimeoutConfig, gc)
+	}
+	if suite.GatewayClassName != "" {
+		suite.ControllerName = kubernetes.GWCMustHaveAcceptedConditionTrue(t, suite.Client, suite.TimeoutConfig, suite.GatewayClassName)
+	}
+
+	t.Logf("ControllerName is %s", suite.ControllerName)
+
 	suite.Applier.ControllerName = suite.ControllerName
 	suite.Applier.FS = suite.FS
 

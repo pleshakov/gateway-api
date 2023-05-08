@@ -59,10 +59,21 @@ func TestConformance(t *testing.T) {
 		*flags.GatewayClassName, *flags.CleanupBaseResources, *flags.ShowDebug, *flags.EnableAllSupportedFeatures, *flags.SupportedFeatures, *flags.ExemptFeatures)
 
 	cSuite := suite.New(suite.Options{
-		Client:                     client,
-		RESTClient:                 clientset.CoreV1().RESTClient().(*rest.RESTClient),
-		RestConfig:                 cfg,
-		GatewayClassName:           *flags.GatewayClassName,
+		Client:     client,
+		RESTClient: clientset.CoreV1().RESTClient().(*rest.RESTClient),
+		RestConfig: cfg,
+		// GatewayClassName: *flags.GatewayClassName,
+		// The list of GatewayClassNames could be passed via a cli arg.
+		GatewayClassNames: []string{
+			"nginx-1",
+			"nginx-2",
+			"nginx-3",
+			"nginx-4",
+			"nginx-5",
+			"nginx-6",
+			"nginx-7",
+			"nginx-8",
+		},
 		Debug:                      *flags.ShowDebug,
 		CleanupBaseResources:       *flags.CleanupBaseResources,
 		SupportedFeatures:          supportedFeatures,
