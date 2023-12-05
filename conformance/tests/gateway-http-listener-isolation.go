@@ -57,6 +57,7 @@ var GatewayHTTPListenerIsolation = suite.ConformanceTest{
 		}
 
 		testCases := []http.ExpectedResponse{
+			// Requests to the empty hostname listener
 			{
 				Request:   http.Request{Host: "bar.com", Path: "/empty-hostname"},
 				Backend:   "infra-backend-v1",
@@ -69,6 +70,33 @@ var GatewayHTTPListenerIsolation = suite.ConformanceTest{
 			{
 				Request:  http.Request{Host: "bar.com", Path: "/foo-wildcard-example-com"},
 				Response: http.Response{StatusCode: 404},
+			},
+			// Requests to the wildcard-example-com listener
+			{
+				Request:  http.Request{Host: "bar.example.com", Path: "/empty-hostname"},
+				Response: http.Response{StatusCode: 404},
+			},
+			{
+				Request:   http.Request{Host: "bar.example.com", Path: "/wildcard-example-com"},
+				Backend:   "infra-backend-v2",
+				Namespace: ns,
+			},
+			{
+				Request:  http.Request{Host: "bar.example.com", Path: "/foo-wildcard-example-com"},
+				Response: http.Response{StatusCode: 404},
+			},
+			// Requests to the foo-wildcard-example-com listener
+			{
+				Request:  http.Request{Host: "bar.foo.example.com", Path: "/empty-hostname"},
+				Response: http.Response{StatusCode: 404},
+			},
+			{
+				Request:  http.Request{Host: "bar.foo.example.com", Path: "/wildcard-example-com"},
+				Response: http.Response{StatusCode: 404},
+			},
+			{
+				Request: http.Request{Host: "bar.foo.example.com", Path: "/foo-wildcard-example-com"},
+				Backend: "infra-backend-v3",
 			},
 		}
 
