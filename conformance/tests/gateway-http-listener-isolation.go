@@ -68,7 +68,7 @@ var GatewayHTTPListenerIsolation = suite.ConformanceTest{
 				Response: http.Response{StatusCode: 404},
 			},
 			{
-				Request:  http.Request{Host: "bar.com", Path: "/foo-wildcard-example-com"},
+				Request:  http.Request{Host: "bar.com", Path: "/wildcard-foo-example-com"},
 				Response: http.Response{StatusCode: 404},
 			},
 			// Requests to the wildcard-example-com listener
@@ -82,7 +82,7 @@ var GatewayHTTPListenerIsolation = suite.ConformanceTest{
 				Namespace: ns,
 			},
 			{
-				Request:  http.Request{Host: "bar.example.com", Path: "/foo-wildcard-example-com"},
+				Request:  http.Request{Host: "bar.example.com", Path: "/wildcard-foo-example-com"},
 				Response: http.Response{StatusCode: 404},
 			},
 			// Requests to the foo-wildcard-example-com listener
@@ -95,7 +95,7 @@ var GatewayHTTPListenerIsolation = suite.ConformanceTest{
 				Response: http.Response{StatusCode: 404},
 			},
 			{
-				Request: http.Request{Host: "bar.foo.example.com", Path: "/foo-wildcard-example-com"},
+				Request: http.Request{Host: "bar.foo.example.com", Path: "/wildcard-foo-example-com"},
 				Backend: "infra-backend-v3",
 			},
 		}
