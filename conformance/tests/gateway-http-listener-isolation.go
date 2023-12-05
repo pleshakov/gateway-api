@@ -44,7 +44,7 @@ var GatewayHTTPListenerIsolation = suite.ConformanceTest{
 		// namespace so we have to wait for it to be ready.
 		kubernetes.NamespacesMustBeReady(t, suite.Client, suite.TimeoutConfig, []string{ns})
 
-		gwNN := types.NamespacedName{Name: "gateway-http-listener-isolation", Namespace: ns}
+		gwNN := types.NamespacedName{Name: "http-listener-isolation", Namespace: ns}
 
 		routes := []types.NamespacedName{
 			{Namespace: ns, Name: "attaches-to-empty-hostname"},
