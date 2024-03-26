@@ -222,6 +222,7 @@ func NewExperimentalConformanceTestSuite(options ExperimentalConformanceOptions)
 		FS:                       *options.FS,
 		UsableNetworkAddresses:   options.UsableNetworkAddresses,
 		UnusableNetworkAddresses: options.UnusableNetworkAddresses,
+		RunTest:                  options.RunTest,
 	}
 
 	// apply defaults
